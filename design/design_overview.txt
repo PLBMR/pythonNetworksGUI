@@ -1,0 +1,76 @@
+design_overview.txt
+
+	Networks have become an extremely important part of academic inquiry
+in recent years. With the recent upsurge in strong algorithms in graph theory,
+persons in many different fields of academia have used networks to better
+understand the structure of various different ideas and topics, such as
+protein-protein interaction networks in biology and social networks in
+sociology. Because of this, there has been a recent surge in demand for
+software and modules that can perform rigorous network analysis. However,
+many of these pieces of software have been either inefficient or require high
+barriers to usage. Hence, this led to this problem: how can one present a
+sophisticated topic like network analysis to an audience that is not as
+sophisticated in the topic?
+	I first looked at several different pieces of software and modules to
+study where exactly I would start with dealing with this question. The main
+pieces of software and modules I looked at are outlined in 
+Competitive_Analysis.pdf. To give summary of the competitive analysis, I saw
+that the modules used were powerful but inaccessible to non-programmers and
+the graphical user interfaces availables were usable but rather weak when it
+came to metric building on networks. Hence, my original plan for this project
+was to both make an approachable interface for a user and a set of metrics
+and applications that presented the power of network analysis to the user.
+	The front-end of the project would be based off the 
+OOP-based eventBasedAnimation using standard model-view-controller design. The
+back-end would involve a script dedicated to building the graph classes, a
+script dedicated to building metrics off the given graph, and a webscraper to
+build graphs based off the linkage networks built by wikipedia pages.
+	Because of the heavy focus on back-end for the project, my project's UI
+focus was dedicated to providing simplicity and accessibility for a given user.
+The report tab was designed to provide a clean area to edit info and manipulate
+the given selected objects in a streamlined, easy-to-read manner. The buttons
+are designed to provide a simple way of accessing build structures and
+metric-based buttons without having a clutter of menus to move through. The
+graph is meant to visualize the simplified abstraction of a network,
+which is essentially a set of nodes and a set of edges connecting those nodes.
+This is really to help the user understand the top-level idea of a network:
+abstracting away all properties to just look at structure and interactions.
+	The graph class became a given set of nodes and a given set of edges. While
+I originally designed the graph as two dictionaries (similar to the network
+module NetworkX), I realized that the more mathematical qualities of a graph
+could be emphasize by making it just a set of nodes and a set of edges. This
+was also strongly recommended by my CA (evan bergeron, andrew ID: ebergero). A
+node itself stored both its visual information, its label, and its metric
+information. An edge knew the two nodes it was connected to, it's type (and
+hence its direction), and several other visual aspects.
+	The metric builder was based on the idea of building an adjacency matrix
+to represent the connections that nodes had to each other on a network. This was
+done because many mathematical properties of metric-building were made easier
+by using matrix-based calculations rather than using non-mathematical data
+structures. This was helped by using the ndarray and matrix data structures in
+the module numpy. I chose numpy for this particular part of the project because
+it provided an optimized framework for matrix multiplication, array searches,
+and other mathematically-oriented properties. I chose a set of very strong
+and understandable measures of centrality, betweenness, and clustering in order
+to introduce the user to many rather interesting and approachable properties
+of certain networks.
+	The webscraper was designed to create a given page network given a starting
+page, depth, and max degree. I ask for depth and max degree to shorten graph
+growth: Looking at all links on a given wikipedia page makes the graph extremely
+large and unweildy for my framework. The webscraper used urllib2 to grab the web
+html and BeautifulSoup to parse HTML. Urllib2 was used due to my general
+familiarity with it from the last few weeks of class (although we used an
+earlier version, urllib, in class). BeautifulSoup was used as my parser because
+it treats the html as a massive tree of given html tags, which given my graph
+theory background felt intuitive to use and study. The webscraper involved
+developing a linked dictionary of wikipedia page and then using this linked
+dictionary to build the given graph it creates. I used a memoizer for making
+the graph so that when we reached a node that is already in the graph, we
+simply attach an edge to that node and don't go further into that node's links
+(because we have already seen that node's links). I cleaned up the link names
+when sending the graph to my GUI so that the node labels did not clutter the
+interface.
+	Overall, I believe that my project provides a way for an interested party
+to begin studying and exploring the properties of networks. I hope to eventually
+build more metrics and webscraping applications for this project in order to
+to add more power to the abstraction of nodes and edges.

@@ -1,0 +1,37 @@
+Instructions.txt
+
+Node Creator:
+-Click on empty space to make a new node.
+-Click on a node to select it.
+-Drag on a node to move it around.
+-Press "Up" to increase the selected node's radius.
+-Press "Down" to decrease the selected node's radius.
+-Press "d" to delete the selected node.
+
+Edge Creator:
+-Press Undir or Dir to specify making a directed or undirected edge respectively.
+-click and drag to start forming an edge.
+-release on two nodes to attach an edge to the two nodes.
+-Click the circle attached to each edge to select the edge.
+-Press "d" to delete a selected edge.
+
+WikiScraper:
+-Press the WikiScraper button to activate entry mode.
+-Enter a string, integer, and integer in the following three request boxes.
+-To move to the next box if you followed the request procedure, press "Return" or "Enter".
+
+Metric Builder:
+-Press the metric builder button to build metrics on the current graph. You can see these reports in the metric section on the report tab for nodes.
+
+BFS:
+-Press the button to start Breadth-First Search Mode.
+-Then, click on a node to set a source node for Breadth-First Search. This performs BFS and then turns off Breadth-First Search Mode. You can see these reports in the metric section on the report tab for nodes.
+
+Report Tab:
+
+-Select an object to see its report.
+-Click an entry box on the report tab to select it.
+-While selected, press "left" or "right" to move the index box.
+-Press "Backspace" to delete info.
+-Input info from the keyboard to add information in the selected node.
+-Press return to assign info to the selected object, if the info is up to the label's requirements.

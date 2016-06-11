@@ -1,0 +1,11 @@
+interativeDesignChanges.txt
+
+    After the feedback that I was given on tuesday, I decided that one of the
+key features that I would want to implement to make my project more
+user-friendly was to clean up the way the report tab displayed information
+and the way I present breadth-first search (BFS) to the user. Hence, I decided
+to add a mechanism to each entry box on the report tab that allows one to
+scroll through a given entry using a particular entry indexer (displayed by
+the gray box shown when an entry box is active) and add a button dedicated to
+applying BFS to the graph given a particular clicked node and then displaying
+that in the metrics for each node in the graph.
