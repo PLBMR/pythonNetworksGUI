@@ -96,6 +96,7 @@ class graph(Struct):
     #clean up times when done
 
     def add_edge(self,firstNode,secondNode,edgeType,edgeLabel,selected,weight):
+        #adds an edge to our graph
         newEdge = edge(fromNode = firstNode,toNode = secondNode,
                         edgeType = edgeType, edgeLabel = edgeLabel,
                         selected=selected,
@@ -107,12 +108,13 @@ class graph(Struct):
             if (firstNode != secondNode):
                 secondNode.outSet.add(firstNode)
                 secondNode.inSet.add(firstNode)
-        else: #directed instance
+        else: #directed instance, just one way
             self.edgeSet.add(newEdge)
             firstNode.outSet.add(secondNode)
             secondNode.inSet.add(firstNode)
 
     def add_edges(self,edgeList):
+        #adds several edges to our graph at once
         (fNodeInd,tNodeInd,typeInd,labelInd,weightInd) = (0,1,2,3,4)
         if (type(edgeList) == list): #need it to be a list
             for edgeTup in edgeList:
@@ -121,34 +123,42 @@ class graph(Struct):
                         edgeTup[typeInd],edgeTup[labelInd],edgeTup[weightInd])
 
     def add_edge_man(self,edge,firstNode,secondNode):
+        #manual addition of edges
         self.edgeSet.add(edge)
         if (edge.edgeType == "undirected"):
+            #need to add connection both ways
             firstNode.outSet.add(secondNode)
             firstNode.inSet.add(secondNode)
             if (firstNode != secondNode): #not a self-edge
                 secondNode.outSet.add(firstNode)
                 secondNode.inSet.add(firstNode)
         else:
+            #add edges just one way
             firstNode.outSet.add(secondNode)
             secondNode.inSet.add(firstNode)
 
     def removeEdge(self,edge):
+        #removes an edge from the graph
         if (edge.edgeType == "undirected"):
+            #remove both directions
             edge.fromNode.inSet.remove(edge.toNode)
             edge.fromNode.outSet.remove(edge.toNode)
             edge.toNode.inSet.remove(edge.fromNode)
             edge.toNode.outSet.remove(edge.fromNode)
-        else: #directed case
+        else: #directed case, just one direction
             edge.fromNode.outSet.remove(edge.toNode)
             edge.toNode.inSet.remove(edge.fromNode)
         self.edgeSet.remove(edge)
 
     def wikiCleaner(self): #cleans graph after wiki scrape
         for node in self.nodeSet:
+            #clean labels
             labelListing = node.label.split("/")
             node.label = labelListing[len(labelListing)-1] #last part is label
+            #unselect
             node.selected = False
         for edge in self.edgeSet:
+            #clean edge label
             edgeListing = edge.edgeLabel.split(" to ")
             edgeParts = [] #add to this for new label
             for edgePart in edgeListing:
@@ -159,7 +169,7 @@ class graph(Struct):
 
     #drawing graph
 
-    def draw(self, canvas):
+    def draw(self, canvas): #general drawing method for the graph
         for edge in self.edgeSet:
             edge.draw(canvas)
         for node in self.nodeSet:
@@ -167,11 +177,13 @@ class graph(Struct):
 
 class node(Struct):
     def __init__(self,cx,cy,r,label):
+        #centering and radius
         self.cx = cx
         self.cy = cy
         self.r = r
         self.drawMargin = 8 #just for drawing
         self.selected = True
+        #sets for adjacencies
         self.outSet = set([])
         self.inSet = set([])
         self.label = label
@@ -179,6 +191,7 @@ class node(Struct):
         #what can't
         self.showInfo = False #for showing info
         self.charDict = {} #for adding additional information
+        #what not to display in dashboard information
         self.nondisplayGroup = ["uniqueLabel","selected",
         "showInfo","nondisplayGroup","outSet","inSet"]
 
@@ -214,8 +227,9 @@ class node(Struct):
     #actual draw function
 
     def draw(self,canvas):
-        if self.selected:
+        if self.selected: #make selection oval
             self.drawSelectedOval(canvas)
+        #then make general draw
         self.drawOuterOval(canvas)
         self.drawInnerOval(canvas)
         if self.showInfo: #If it wants to show info
@@ -223,7 +237,7 @@ class node(Struct):
 
     #legality
     
-    def inNode(self,xPar,yPar):
+    def inNode(self,xPar,yPar): #check for hover or click on node
         return ((self.cx-self.r <= xPar <= self.cx+self.r) and
                 (self.cy-self.r <= yPar <= self.cy+self.r))
 
@@ -232,6 +246,7 @@ class node(Struct):
 
 class edge(Struct):
     def __init__(self,fromNode,toNode,edgeType,edgeLabel,selected,weight=1):
+        #adjacencies
         self.fromNode = fromNode
         self.toNode = toNode
         self.width = 2 #for initial draw
@@ -242,8 +257,10 @@ class edge(Struct):
         self.weight = weight
         self.color = "black"
         self.selected = selected
+        #information not to display in dashboard
         self.nondisplayGroup = ["uniqueEdgeLabel",
                 "selected","showInfo","nondisplayGroup","fromNode","toNode"]
+        #helper for clicks
         self.clickOvalR = 10
         self.clickOvalMargin = 20 #for makign edge selector
         self.charDict = {} #for adding additional information
@@ -287,6 +304,8 @@ class edge(Struct):
             canvas.create_line(x0,y0,x1,y1,width = widthMargin, fill = "yellow")
         else:
             (midX0, midY0) = ((x0+x1)/2,(y0+y1)/2)
+            #ensure arrow in background is slightly larger than arrow in the
+            #foreground
             arrowPar = 24
             arrowTuple = (arrowPar,
                     arrowPar,arrowPar) #specifies how I want my arrow to look
@@ -298,15 +317,15 @@ class edge(Struct):
     #actual drawing
 
     def draw(self,canvas):
-        if (self.selected):
+        if (self.selected): #highlight it
             self.drawHighlightEdge(canvas)
+        #specify centers to anchor edge
         (x0,y0) = (self.fromNode.cx,self.fromNode.cy)
         (x1,y1) = (self.toNode.cx,self.toNode.cy)
-        (midX0, midY0) = ((x0+x1)/2,(y0+y1)/2)
+        (midX0, midY0) = ((x0+x1)/2,(y0+y1)/2) #used for click oval
         if (self.edgeType == "undirected"):
             canvas.create_line(x0,y0,x1,y1,width = self.width,fill=self.color)
         else:
-            (midX0, midY0) = ((x0+x1)/2,(y0+y1)/2)
             arrowPar = 15
             arrowTuple = (arrowPar,
                     arrowPar,arrowPar) #specifies how I want my arrow to look
@@ -316,6 +335,7 @@ class edge(Struct):
                 fill=self.color)
         #make clickOval
         (circleMidX,circleMidY) = ((x0+midX0)/2,(y0+midY0)/2)
+        #place slightly off from edge
         (clickOvalCX,clickOvalCY) = (circleMidX-self.clickOvalMargin,
                                         circleMidY-self.clickOvalMargin)
         canvas.create_oval(clickOvalCX-self.clickOvalR,

@@ -1,4 +1,6 @@
 #termProject-wikiScraper.py
+#contains my method for building a network of wikipedia pages using webscraping
+#methods
 
 #imports
 
@@ -16,7 +18,8 @@ def makeSoup(page): #let's us parse page
     except: #we have a broken link
         return None
 
-def grabHeaderLinks(page,wikiHandle,maxDeg): #must be legal page
+def grabHeaderLinks(page,wikiHandle,maxDeg): 
+    #get legal pages connected on our page
     listOfHeaderLinks = []
     pageSoup = makeSoup(page) #allows us to parse html of page
     if (pageSoup == None): #broken link
@@ -53,6 +56,7 @@ def tryWikiScrape(startWikiNode,depth,maxDeg): #give starting wikipedia page,
     return wikiDict
 
 def buildWikiGraph(startWikiNode,depth,maxDeg,canvasWidth,canvasHeight):
+    #script that builds the wikipedia page network from a scrape
     wikiGraph = classScript.graph()
     wikiDict = tryWikiScrape(startWikiNode,depth,maxDeg)
     wikiHandle = "http://en.wikipedia.org"
