@@ -1,4 +1,5 @@
-Instructions.txt
+useInstructions.txt
+Description: Discusses how to use the application once it is running.
 
 Node Creator:
 -Click on empty space to make a new node.
@@ -18,14 +19,18 @@ Edge Creator:
 WikiScraper:
 -Press the WikiScraper button to activate entry mode.
 -Enter a string, integer, and integer in the following three request boxes.
--To move to the next box if you followed the request procedure, press "Return" or "Enter".
+-To move to the next box if you followed the request procedure, press "Return" 
+    or "Enter".
 
 Metric Builder:
--Press the metric builder button to build metrics on the current graph. You can see these reports in the metric section on the report tab for nodes.
+-Press the metric builder button to build metrics on the current graph. You can 
+    see these reports in the metric section on the report tab for nodes.
 
 BFS:
 -Press the button to start Breadth-First Search Mode.
--Then, click on a node to set a source node for Breadth-First Search. This performs BFS and then turns off Breadth-First Search Mode. You can see these reports in the metric section on the report tab for nodes.
+-Then, click on a node to set a source node for Breadth-First Search. This 
+    performs BFS and then turns off Breadth-First Search Mode. You can see these
+    reports in the metric section on the report tab for nodes.
 
 Report Tab:
 
@@ -34,4 +39,5 @@ Report Tab:
 -While selected, press "left" or "right" to move the index box.
 -Press "Backspace" to delete info.
 -Input info from the keyboard to add information in the selected node.
--Press return to assign info to the selected object, if the info is up to the label's requirements.
+-Press return to assign info to the selected object, if the info is up to the 
+    label's requirements.
