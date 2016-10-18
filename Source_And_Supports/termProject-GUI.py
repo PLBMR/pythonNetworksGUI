@@ -1,4 +1,6 @@
-#termProject.py
+#termProject-GUI.py
+#contains all of the visualization component objects for developing the
+#interface
 
 #imports
 import eventBasedAnimation

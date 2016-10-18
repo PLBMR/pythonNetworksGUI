@@ -1,5 +1,5 @@
 #termProject-Metric_Builder.py
-#This section is where I will build my particular metrics
+#This section is where I build certain metrics on the network
 
 #imports
 
