@@ -13,6 +13,7 @@ import classScript #only for test cases
 #build helpers
 
 def addEdgeToMatrix(edge,matrix): #helper for buildAdjacencyMatrix
+    #get rows and coloumns from ordering of the nodes
     row = edge.toNode.charDict["ordering"]
     col = edge.fromNode.charDict["ordering"]
     if (row == col): #self-edge
@@ -26,39 +27,45 @@ def addEdgeToMatrix(edge,matrix): #helper for buildAdjacencyMatrix
 
 def buildAdjacencyMatrix(graph):
     nodeCounter = 0 #for assigning an order
+    #order our nodes
     for node in graph.nodeSet:
         node.charDict["ordering"] = nodeCounter
         nodeCounter += 1
-    numpyList = [[0 for i in xrange(nodeCounter)] for j in xrange(nodeCounter)]
-    adjMatrix = np.array(numpyList,dtype = int)
+    #prepare adjacency matrix
+    pyArray = [[0 for i in xrange(nodeCounter)] for j in xrange(nodeCounter)]
+    adjMatrix = np.array(pyArray,dtype = int)
+    #populate adjacency matrix with numerical representations of edges
     for edge in graph.edgeSet:
         addEdgeToMatrix(edge,adjMatrix)
     return adjMatrix
 
 #helpers for metric  builders
 
-def normalizeVec(vec): #assists in normalizing a given row vector #TEST THIS
+def normalizeVec(vec): #assists in normalizing a given row vector 
     vecMag = 0.0
+    #get magnitude of vector
     for component in vec:
         vecMag += component**2
     vecMag = math.sqrt(vecMag)
     if vecMag == 0.0: #vector has no magnitude, can't be normalized further
         return vec
-    else:
+    else: #make normalization
         for componentInd in xrange(len(vec)):
             vec[componentInd] /= float(vecMag)
         return vec
 
 def isUndirected(adjMatrix): #checks if adjacency matrix of graph is
-#undirected
+    #undirected
     for row in xrange(len(adjMatrix)):
-        for col in xrange(row+1,len(adjMatrix[0])): #check beyond diagonal
+        for col in xrange(row+1,len(adjMatrix[0])):
+            #if symmetry does not occur across the diagonal, it is not
+            #undirected
             if (adjMatrix[row][col] != adjMatrix[col][row]): return False
-    #went throught entirely and didn't find it
+    #went throught entirely and didn't find a lack of diagonal symmetry
     return True
 
 def findNodesWithDistD(distArray,d): #find nodes with distance d in a 
-#distance array
+    #distance array
     distDList = []
     for nodeInd in xrange(len(distArray)):
         if (distArray[nodeInd] == d): distDList.append(nodeInd)
@@ -67,24 +74,24 @@ def findNodesWithDistD(distArray,d): #find nodes with distance d in a
 def findOutNeighbors(adjMatrix,nodeInd): #finds out neighbors of a given node
     outNeighborIndList = []
     for row in xrange(len(adjMatrix)):
-        if adjMatrix[row][nodeInd] > 0: #there is a connection
+        if adjMatrix[row][nodeInd] > 0: #there is a connection from node
+            #nodeInd to node row
             outNeighborIndList.append(row)
     return outNeighborIndList
 
 #metric builders
 
 def findEigenvectorCentrality(adjMatrix): #finds eigenvector centrality
-#idea behind this is outlined in Networks, an Introduction pp. 169-172
     (eigVals,eigVectors) = np.linalg.eig(adjMatrix)
     #get leading eigenvalue and leading index of this eigenvalue
-    leadingEigVal,leadingInd = max(eigVals),eigVals.argmax()
+    leadingInd = eigVals.argmax()
     leadingEigVec = eigVectors[...,leadingInd]
     return leadingEigVec
 
 def findKatzCentrality(adjMatrix,trials): #finds Katz centrality
-#idea behind this is outlined in Networks, An Introduction pp. 172-175
-#concept: Inverting matrices gets extremely innefficient, hence we want to
-#find Katz centrality through a given number of trials'
+    #idea behind this is outlined in Networks, An Introduction pp. 172-175
+    #concept: Inverting matrices gets extremely innefficient, hence we want to
+    #find Katz centrality through a given number of trials'
     #first, assume a bad estimate on centrality
     KatzCentral = np.matrix([[0] for i in xrange(adjMatrix.shape[0])])
     epsilon = 10**-8 #gives our accuracy for calculating alpha
@@ -103,75 +110,83 @@ def findKatzCentrality(adjMatrix,trials): #finds Katz centrality
     return KatzCentral
 
 def calcLocalClusteringCoeffsUndir(adjMatrix): #calculates local clustering
-##coefficients for undirected graphs
-   clusterCoeffVec = []
-   for row in xrange(len(adjMatrix)):
-       neighborsOfI = []
-       for col in xrange(len(adjMatrix[row])):
-           if (adjMatrix[row,col] > 0): #i is adjacent to j (col)
-               neighborsOfI.append(col)
-       #numOfPairs is equivalent to \binom{neighbors of i}{2}
-       numOfPairs = .5 * (len(neighborsOfI)) * (len(neighborsOfI) - 1)
-       numConnectedPairs = 0 
-       for firstNodeInd in xrange(len(neighborsOfI)):
-           for secondNodeInd in xrange(firstNodeInd+1,len(neighborsOfI)):
-               (firstNode,secondNode) = (neighborsOfI[firstNodeInd],
-                                         neighborsOfI[secondNodeInd])
-               if (adjMatrix[firstNode,secondNode] > 0):
-                   numConnectedPairs += 1
-       localClusterCoeff = (float(numConnectedPairs)/numOfPairs if 
-           numOfPairs != 0 else 0 )
-       clusterCoeffVec.append(localClusterCoeff)
-   clusterCoeffVec = np.array(clusterCoeffVec,dtype = float)
-   return clusterCoeffVec
+    #coefficients for undirected graphs
+    clusterCoeffVec = []
+    for row in xrange(len(adjMatrix)):
+        neighborsOfI = []
+        for col in xrange(len(adjMatrix[row])):
+            if (adjMatrix[row,col] > 0): #i is adjacent to j (col)
+                neighborsOfI.append(col)
+        #numOfPairs is equivalent to \binom{neighbors of i}{2}, i.e. the number
+        #of possible adjacencies among neighbors for node i
+        numOfPairs = ((float(1)/2) * 
+                     (len(neighborsOfI)) * (len(neighborsOfI) - 1))
+        #get the number of actual adjacencies among neighbors of node i
+        numConnectedPairs = 0 
+        for firstNodeInd in xrange(len(neighborsOfI)):
+            for secondNodeInd in xrange(firstNodeInd+1,len(neighborsOfI)):
+                (firstNode,secondNode) = (neighborsOfI[firstNodeInd],
+                                          neighborsOfI[secondNodeInd])
+                if (adjMatrix[firstNode,secondNode] > 0): #two neighbors are
+                    #adjacent
+                    numConnectedPairs += 1
+        localClusterCoeff = (float(numConnectedPairs)/numOfPairs if 
+                             numOfPairs != 0 else 0 )
+        clusterCoeffVec.append(localClusterCoeff)
+    #turn into numpy array
+    clusterCoeffVec = np.array(clusterCoeffVec,dtype = float)
+    return clusterCoeffVec
 
 def calcLocalClusteringCoeffsDir(adjMatrix): #calculates local clustering
 ###coefficients for directed graphs
-   clusterCoeffVec = []
-   for col in xrange(len(adjMatrix[0])):
-       neighborsOfI = []
-       for row in xrange(len(adjMatrix)):
-           if (adjMatrix[row,col] > 0): #i is adjacent to j (col)
-               neighborsOfI.append(row)
-       #numOfPosPairs is equivalent to 2 * \binom{neighbors of i}{2}
-       numOfPosPairs = (len(neighborsOfI)) * (len(neighborsOfI) - 1)
-       numConnectedPairs = 0 
-       for fromNodeInd in xrange(len(neighborsOfI)):
-           for toNodeInd in xrange(len(neighborsOfI)):
-               (fromNode,toNode) = (neighborsOfI[fromNodeInd],
+    clusterCoeffVec = []
+    for col in xrange(len(adjMatrix[0])):
+        neighborsOfI = []
+        for row in xrange(len(adjMatrix)):
+            if (adjMatrix[row,col] > 0): #i is adjacent to j (col)
+                neighborsOfI.append(row)
+        #numOfPosPairs is equivalent to 2 * \binom{neighbors of i}{2}
+        numOfPosPairs = (len(neighborsOfI)) * (len(neighborsOfI) - 1)
+        #get number of actual adjacencies among neighbors of node i
+        numConnectedPairs = 0
+        #note that we go over pairs twice due to directedness
+        for fromNodeInd in xrange(len(neighborsOfI)):
+            for toNodeInd in xrange(len(neighborsOfI)):
+                (fromNode,toNode) = (neighborsOfI[fromNodeInd],
                                          neighborsOfI[toNodeInd])
-               if (adjMatrix[toNode,fromNode] > 0):
-                   numConnectedPairs += 1
-       localClusterCoeff = (float(numConnectedPairs)/numOfPosPairs if 
-           numOfPosPairs != 0 else 0 )
-       clusterCoeffVec.append(localClusterCoeff)
-   clusterCoeffVec = np.array(clusterCoeffVec,dtype = float)
-   return clusterCoeffVec
+                if (adjMatrix[toNode,fromNode] > 0 and toNode != fromNode):
+                    numConnectedPairs += 1
+        #then calculate local clustering coefficient fo rnode i
+        localClusterCoeff = (float(numConnectedPairs)/numOfPosPairs if 
+                             numOfPosPairs != 0 else 0 )
+        clusterCoeffVec.append(localClusterCoeff)
+    clusterCoeffVec = np.array(clusterCoeffVec,dtype = float)
+    return clusterCoeffVec
 
-def breadthFirstSearch(adjMatrix,sourceKey): #non-naive implementation
-   #Shorten this #test this #figure out how to add to arrays
-   #The idea behind this non-naive implementation comes from
-   #Networks, An Introduction by M.E.J. Newman
-   queue = [sourceKey,None]
-   readPointerInd = 0
-   writePointerInd = 1
-   distArray = np.array([-1 for i in xrange(adjMatrix.shape[0])],dtype = int)
-   distArray[sourceKey] = 0 #setting our source 0
-   while (readPointerInd != writePointerInd): #still have unknown distances
-       readElement = queue[readPointerInd]
-       readPointerInd += 1
-       d = distArray[readElement] #gets our initial distance
-       listOfNeighboringNodes = [] 
-       for nodeInd in xrange(len(adjMatrix[readElement])):
-           if (adjMatrix[nodeInd][readElement] > 0): #it's a neighbor
-               listOfNeighboringNodes.append(nodeInd)
-       for nodeInd in listOfNeighboringNodes:
-           if (distArray[nodeInd] == -1):
-               distArray[nodeInd] = d+1
-               queue[writePointerInd] = nodeInd
-               queue.append(None)
-               writePointerInd += 1
-   return distArray
+def breadthFirstSearch(adjMatrix,sourceKey): #get distances from a node ordered
+    #as sourceKey
+    queue = [sourceKey,None] #we will append to this
+    readPointerInd = 0
+    writePointerInd = 1
+    distArray = np.array([-1 for i in xrange(adjMatrix.shape[0])],dtype = int)
+    distArray[sourceKey] = 0 #setting our source 0
+    while (readPointerInd != writePointerInd): #still have unknown distances
+        readElement = queue[readPointerInd]
+        readPointerInd += 1
+        d = distArray[readElement] #gets our initial distance of the read
+        #element
+        listOfNeighboringNodes = [] 
+        for nodeInd in xrange(len(adjMatrix[readElement])):
+            if (adjMatrix[nodeInd][readElement] > 0): #it's a neighbor
+                listOfNeighboringNodes.append(nodeInd)
+        for nodeInd in listOfNeighboringNodes:
+            if (distArray[nodeInd] == -1): #haven't seen it yet
+                distArray[nodeInd] = d+1 #assign it some distance
+                #look further at the node at nodeInd by putting it in the queue
+                queue[writePointerInd] = nodeInd 
+                queue.append(None)
+                writePointerInd += 1
+    return distArray
 
 def modifiedBFS(adjMatrix,sourceKey): #implementation for betweenness
     distArray = np.array([-1 for i in xrange(len(adjMatrix))],dtype=int)
@@ -189,46 +204,57 @@ def modifiedBFS(adjMatrix,sourceKey): #implementation for betweenness
             #here
             consideredWeight = weightArray[nodeInd] #assigned
             inList = [i for i in xrange(len(adjMatrix[nodeInd])) if 
-                                    adjMatrix[nodeInd][i] > 0]
+                      adjMatrix[nodeInd][i] > 0] #col is from, row is to
             nodeIsLeaf = True #will change depending on neighbors
             for neighborInd in inList:
-                if (distArray[neighborInd] == -1): #establish weight
+                if (distArray[neighborInd] == -1): #establish weight, since
+                    #you haven't seen it
                     distArray[neighborInd] = d+1
                     weightArray[neighborInd] = consideredWeight
                     nodeIsLeaf = False
-                elif (distArray[neighborInd] == d+1): #add weight
+                elif (distArray[neighborInd] == d+1): #add weight to it
                     weightArray[neighborInd] += consideredWeight
                     nodeIsLeaf = False
-                elif (d+1 > distArray[neighborInd] >= 0): pass
+                elif (d+1 > distArray[neighborInd] >= 0): #already added
+                    #all considered weight to it
+                    pass
             if (nodeIsLeaf): leafList.append(nodeInd)
         d += 1 #increase d
     return (distArray,weightArray,leafList)
 
 def betweennessCalc(adjMatrix,distArray,weightArray,leafList):
+    #calculates betweenness centrality for a node
     #give one as a buffer to all nodes
     betweenCentralArray = np.array([1 for i in xrange(len(weightArray))],
-                                        dtype = float)
+                                    dtype = float)
     for i in xrange(len(betweenCentralArray)):
-        if (distArray[i] == -1): betweenCentralArray[i] -= 1
-    seenList = []
+        if (distArray[i] == -1): #never is reached
+            betweenCentralArray[i] -= 1
+    seenList = [] #add to this considered nodes
     firstDist = max(distArray)
     for dist in xrange(firstDist,0,-1): #moving down distances
         nodeIndList = [i for i in xrange(len(distArray)) 
-                        if distArray[i] == dist]
+                       if distArray[i] == dist]
         for nodeInd in nodeIndList:
             consideredDistance = distArray[nodeInd]
             outNeighborIndList = findOutNeighbors(adjMatrix,nodeInd)
+            #check neighbors of this node
             for neighborNodeInd in outNeighborIndList:
+                #if this node has not been considered and has a distance just
+                #1 greater than the current distance considered, we know that
+                #it uses our node at nodeInd for betweenness purposes
                 if ((distArray[neighborNodeInd] + 1 == consideredDistance) and 
-                    (distArray[neighborNodeInd] != -1) and (
-                    neighborNodeInd not in seenList)): #assigned it a distance
+                    (distArray[neighborNodeInd] != -1) and
+                    (neighborNodeInd not in seenList)): #assigned it a distance
+                    #add to betweenness centrality for the neighboring node
                     betweenCentralArray[neighborNodeInd] += (
-                        betweenCentralArray[nodeInd] * float(
+                            betweenCentralArray[nodeInd] * float(
                             weightArray[neighborNodeInd])/weightArray[nodeInd])
         seenList.extend(nodeIndList) #add these to our seen list
     return betweenCentralArray
 
-def betweennessCalcWrapper(adjMatrix):
+def betweennessCalcWrapper(adjMatrix): #wrapper for whole calculation of
+    #betweenness centrality
     betweennessArray = np.array([0 for i in xrange(len(adjMatrix))],
                                 dtype = float)
     for nodeInd in xrange(len(adjMatrix)):

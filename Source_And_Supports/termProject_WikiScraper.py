@@ -48,9 +48,11 @@ def tryWikiScrape(startWikiNode,depth,maxDeg): #give starting wikipedia page,
     startWikiPage = wikiHandle + startWikiNode #assume node starts with /wiki/
     def scraper(wikiDict, startWikiPage,depth,depthCounter = 0):
         wikiDict[startWikiPage] = {}
-        if (depthCounter < depth):
+        if (depthCounter < depth): #cuts the depth we can grab more header
+            #links for
+            #get top links on this page
             listOfHeaderLinks = grabHeaderLinks(startWikiPage,wikiHandle,maxDeg)
-            for link in listOfHeaderLinks:
+            for link in listOfHeaderLinks: #recursively scrape header links
                 scraper(wikiDict[startWikiPage],link, depth, depthCounter + 1)
     scraper(wikiDict, startWikiPage, depth)
     return wikiDict
@@ -58,10 +60,10 @@ def tryWikiScrape(startWikiNode,depth,maxDeg): #give starting wikipedia page,
 def buildWikiGraph(startWikiNode,depth,maxDeg,canvasWidth,canvasHeight):
     #script that builds the wikipedia page network from a scrape
     wikiGraph = classScript.graph()
-    wikiDict = tryWikiScrape(startWikiNode,depth,maxDeg)
+    wikiDict = tryWikiScrape(startWikiNode,depth,maxDeg) #recursive dictionary
     wikiHandle = "http://en.wikipedia.org"
     startWikiPage = wikiHandle + startWikiNode
-    #draw it randomly on the graph
+    #draw it in random places on the graph
     (cx,cy) = (random.uniform(0,canvasWidth),random.uniform(0,canvasHeight))
     r = 20
     givenNode = classScript.node(cx=cx,cy=cy,r=r,label=startWikiPage)
@@ -70,23 +72,32 @@ def buildWikiGraph(startWikiNode,depth,maxDeg,canvasWidth,canvasHeight):
     def builder(wikiGraph,wikiDict,givenNode):
         for linkKey in wikiDict[givenNode.label]:
             if linkKey in memoizer: #already been here
-                memoizedNode = memoizer[linkKey]
+                memoizedNode = memoizer[linkKey] #retrieve node
+                #build edge
                 edgeLabel = str(givenNode.label)+" to "+str(memoizedNode.label)
                 newEdge = classScript.edge(fromNode=givenNode,
-                toNode=memoizedNode,edgeType = "directed",edgeLabel = edgeLabel,
-                selected = False, weight = 1)
+                                           toNode=memoizedNode,
+                                           edgeType = "directed",
+                                           edgeLabel = edgeLabel,
+                                           selected = False, weight = 1)
                 wikiGraph.add_edge_man(newEdge,givenNode,memoizedNode)
-            else:
+            else: #new node to consider
                 (cx,cy) = (random.uniform(0,canvasWidth),
                     random.uniform(0,canvasHeight))
+                #prepare new node to link to
                 linkageNode = classScript.node(cx=cx,cy=cy,r=r,label=linkKey)
                 wikiGraph.add_node_man(linkageNode)
+                #prepare new edge
                 edgeLabel = str(givenNode.label)+" to "+str(linkageNode.label)
                 newEdge = classScript.edge(fromNode=givenNode,
-                toNode=linkageNode,edgeType = "directed",edgeLabel = edgeLabel,
-                selected = False, weight = 1)
+                                           toNode=linkageNode,
+                                           edgeType = "directed",
+                                           edgeLabel = edgeLabel,
+                                           selected = False, weight = 1)
                 wikiGraph.add_edge_man(newEdge,givenNode,linkageNode)
+                #stick information in memoizer
                 memoizer[linkageNode.label] = linkageNode
+                #recursively move through building graph from this linked node
                 builder(wikiGraph,wikiDict[givenNode.label],linkageNode)
     builder(wikiGraph,wikiDict,givenNode)
     return wikiGraph

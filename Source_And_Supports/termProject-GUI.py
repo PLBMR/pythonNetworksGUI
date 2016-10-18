@@ -642,16 +642,17 @@ class metricBuilderButton(wikiScraperButton):
     #init; stays the same
     def onMouse(self,event):
         #run metric builder
-        self.graph.buildMetrics()
-        #load in metric information for selected objects
-        for node in self.graph.nodeSet:
-            if (node.selected):
-                self.reportTab.storeObjInfo(node)
-                return
-        for edge in self.graph.edgeSet:
-            if (edge.selected):
-                self.reportTab.storeObjInfo(edge)
-                return
+        if (len(self.graph.nodeSet) > 0): #cannot do a case with a null graph
+            self.graph.buildMetrics()
+            #load in metric information for selected objects
+            for node in self.graph.nodeSet:
+                if (node.selected):
+                    self.reportTab.storeObjInfo(node)
+                    return
+            for edge in self.graph.edgeSet:
+                if (edge.selected):
+                    self.reportTab.storeObjInfo(edge)
+                    return
 
 class edgeLegalityButton(edgeMakerButton):
 
@@ -816,16 +817,19 @@ class nodeGUI(eventBasedAnimation.Animation):
 
     #helpers for mouse and key functions
 
-    def entryReset(self): #meant for resetting particular events
+    def entryReset(self): #meant for resetting particular information request
+        #events (specifically requesting information for the wikiscraper)
         self.entryActive = False
         self.link = ""
         (self.entryCounter,self.maxEntryCounter) = (0,0)
         (self.entryList,self.entryListReq) = ([],[])
 
-    def requirementChecker(self):
+    def requirementChecker(self): #helper that checks if a given request
+        #(mainly during an entryActive situation)
         try:
             self.link = eval(self.link)
             if type(self.link) == self.entryListReq[self.entryCounter]:
+                #append information written during this phase
                 self.entryList.append(self.link)
                 self.link = "" #reset
                 self.entryCounter += 1
@@ -856,19 +860,23 @@ class nodeGUI(eventBasedAnimation.Animation):
         if (degree > maxDegree): degree = maxDegree
         return (link,depth,degree)
 
-    def entryActiveKey(self,event):
+    def entryActiveKey(self,event): #key rules during entryActive phase
         if (event.keysym == "Return"):
             self.requirementChecker() #checks if it satisfies our requirements
-            if self.entryCounter == self.maxEntryCounter: #got all entries
+            if self.entryCounter == self.maxEntryCounter: #got all entries,
+                #let us scrpe for the wikipedia graph
                 (link,depth,degree) = self.parseForWikiGraph(self.entryList)
                 self.graph = ws.buildWikiGraph(link,depth,degree,
                     self.reportTab.x0,self.nodeMakerButton.y0)
                 self.graph.wikiCleaner() #cleans graph after a wiki scrape
-                self.reportTab.graph = self.edgeMakerButton.graph=self.nodeMakerButton.graph=self.graph
+                #then update graph across the board to this wiki-scraped
+                #graph
+                self.reportTab.graph = self.edgeMakerButton.graph = self.nodeMakerButton.graph = self.graph
                 self.wikiScraperButton.graph = self.metricBuilderButton.graph = self.bfsButton.graph = self.graph
                 self.entryReset()
                 self.reportTab.resetInfo()
-        elif (event.keysym == "BackSpace"):
+        #typical entry rules for keystrokes
+        elif (event.keysym == "BackSpace"): #remove the last character
             self.link = self.link[:len(self.link)-1]
         elif (event.keysym == "parenleft"):
             self.link += "("
@@ -896,7 +904,7 @@ class nodeGUI(eventBasedAnimation.Animation):
             #value if performed breadth-first search
             if (performedBFS):
                 self.bfsActive = False
-        else:
+        else: #see where we clicked
             if (not(self.entryActive)):
                 if (self.reportTab.onReportTab(event)):
                     self.reportTab.onMouse(event)
@@ -911,18 +919,22 @@ class nodeGUI(eventBasedAnimation.Animation):
                         self.bfsActive = True
                         return
                     elif (button.inButton(event) 
-                        and type(button)==wikiScraperButton):
+                        and type(button) == wikiScraperButton): #move into
+                        #entry mode
                         self.entryActive = True
-                        self.entryText = ["Please write your starting page handle.",
-                        "Please write the max depth (as an integer).",
-                        "Please write the max degree (as an integer)."]
+                        self.entryText = [
+                                "Please write your starting page handle.",
+                                "Please write the max depth (as an integer).",
+                                "Please write the max degree (as an integer)."]
                         self.maxEntryCounter = len(self.entryText)
                         self.entryCounter = 0
                         self.entryList = []
-                        self.entryListReq = [str, int, int] #requirements on entry
+                        self.entryListReq = [str, int, int] #requirements on 
+                        #entry
                         return
                     elif (button.inButton(event) and 
-                        type(button) != edgeLegalityButton): 
+                        type(button) != edgeLegalityButton): #handle selection
+                        #changes
                         givenButton = button
                         givenButton.selected = True
                         for button in self.buttonList:
@@ -932,11 +944,16 @@ class nodeGUI(eventBasedAnimation.Animation):
                         for edge in self.graph.edgeSet: #deselect all edges
                             edge.selected = False
                         return #prevents going to commands
+                #if we do not have one of our special cases above, just
+                #perform the onMouse method on the part of the button
                 for button in self.buttonList:
                     if (button.selected):
                         button.onMouse(event)
 
     def onMouseDrag(self,event):
+        #check to see if certain special events are activated: if those
+        #events are not activated, just go the drag functionality of the
+        #selected button
         if (not(self.bfsActive)):
             if (not(self.entryActive)):
                 if (self.inAnimationBounds(event)):
@@ -944,13 +961,15 @@ class nodeGUI(eventBasedAnimation.Animation):
                         if (button.selected): button.onMouseDrag(event)
 
     def onMouseRelease(self,event):
+        #similar structure to onMouseDrag, but for onMouseRelease situations
         if (not(self.bfsActive)):
             if (not(self.entryActive)):
                 if (self.inAnimationBounds(event)):
                     for button in self.buttonList:
                         if (button.selected): button.onMouseRelease(event)
 
-    def onKey(self,event):
+    def onKey(self,event): #moves key clicks to particular objects of our
+        #application
         if (not(self.bfsActive)):
             if self.entryActive:
                 self.entryActiveKey(event)
@@ -964,7 +983,7 @@ class nodeGUI(eventBasedAnimation.Animation):
                 for button in self.buttonList:
                     if (button.selected): button.onKey(event)
 
-    def onMouseMove(self,event):
+    def onMouseMove(self,event): #for hover-overs on nodes
         if (self.inAnimationBounds(event)):
             for node in self.graph.nodeSet:
                 if node.inNode(event.x,event.y):
@@ -975,14 +994,18 @@ class nodeGUI(eventBasedAnimation.Animation):
 
     #drawing helpers
 
-    def drawEntryActiveScreen(self,canvas):
+    def drawEntryActiveScreen(self,canvas): #used for inputting information for
+        #the wikiscraper
         r = 200
         (x0,y0,x1,y1) = (self.width/2-r,self.height/2-r, self.width/2+r,
                         self.height/2+r)
+        #make rectange for the entry box
         canvas.create_rectangle(x0,y0,x1,y1,fill="gray")
+        #description of information requested
         canvas.create_text(self.width/2,y0,
-            text=self.entryText[self.entryCounter],
-            font = "Arial 14 bold", anchor="n")
+            text=self.entryText[self.entryCounter],font = "Arial 14 bold",
+            anchor="n")
+        #response being generated
         canvas.create_text(self.width/2,y0+r,text=str(self.link),
             font = "Arial 14 bold",anchor="n")
 
@@ -990,8 +1013,9 @@ class nodeGUI(eventBasedAnimation.Animation):
 
     def onDraw(self, canvas):
         self.graph.draw(canvas)
-        if self.entryActive:
+        if self.entryActive: #request information
             self.drawEntryActiveScreen(canvas)
+        #for visualizing edge creation mid-draw
         if (self.edgeMakerButton.selected and self.edgeMakerButton.drawingEdge):
             self.edgeMakerButton.edgeCaster(canvas) #visual of casting edge
         for button in self.buttonList:
@@ -1003,8 +1027,8 @@ class nodeGUI(eventBasedAnimation.Animation):
                 text = "Click on a Node To Source Breadth First Search!",
                 font = "Arial 14 bold", anchor = "nw")
 
-#running program
+#running the program
 
 nodeGUI(width=1000, height=600,windowTitle = "Networks GUI",
-    aboutText = "Networks GUI \n By Michael Rosenberg",
+    aboutText = "Networks GUI\nBy Michael Rosenberg",
     ).run()
